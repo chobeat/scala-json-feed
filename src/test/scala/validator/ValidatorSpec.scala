@@ -1,6 +1,6 @@
 package validator
 
-import java.net.MalformedURLException
+import java.net.{MalformedURLException, URL}
 
 import cats.data.{NonEmptyList, Validated}
 import cats.data.Validated.Invalid
@@ -17,7 +17,8 @@ class ValidatorSpec extends FlatSpec with Matchers {
 
   "The validate function" should "return an empty JSONFeedDocument" in {
     val input = "{}"
-    Validator.validate(input) shouldEqual Validated.valid(JSONFeedDocument(None))
+    Validator.validate(input) shouldEqual Validated.valid(
+      JSONFeedDocument(None))
   }
 
   "The validateItem function" should "return a JSONFeedItem" in {
@@ -38,9 +39,18 @@ class ValidatorSpec extends FlatSpec with Matchers {
     val input = """{"id":"abc","tags":["a","b","c"],"image":"not-an-url" }"""
 
     Validator.validateItem(input) shouldEqual Validated.invalidNel(
-      DecodingFailure(
-        new MalformedURLException("no protocol: not-an-url is not a valid url").toString,
-        List(DownField("image"))))
+      DecodingFailure(new MalformedURLException(
+                        "no protocol: not-an-url is not a valid url").toString,
+                      List(DownField("image"))))
+
+  }
+
+  it should "return a URL object if the image is a valid url" in {
+    val input =
+      s"""{"id":"abc","tags":["a","b","c"],"image": "http://test.com/image.png"}"""
+
+    Validator.validateItem(input).map(_.image) shouldEqual Validated.valid(
+      Some(new URL("http://test.com/image.png")))
 
   }
 }

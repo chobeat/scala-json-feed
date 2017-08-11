@@ -34,8 +34,9 @@ case class JSONFeedItem(id:String,
                        )
 
 object Validator {
-  implicit val decodeInstant: Decoder[URL] = Decoder.decodeString.emap { str =>
+  implicit val decodeInstant: Decoder[URL] = Decoder.decodeString.emap { str => {
     Either.catchNonFatal(new URL(str)).leftMap(t => s"$t is not a valid url")
+  }
   }
 
 
