@@ -1,4 +1,6 @@
 package validator
+import java.net.URL
+
 import cats.data.ValidatedNel
 import io.circe._
 import io.circe.generic.auto._
@@ -6,7 +8,7 @@ import io.circe.parser._
 import io.circe.syntax._
 
 import scala.util.{Success, Try}
-
+import cats.syntax.either._
 /**
   * Created by simone on 11.08.17.
   */
@@ -18,13 +20,13 @@ case class JSONFeedAuthor(name:Option[String],
                           avatar:Option[String])
 
 case class JSONFeedItem(id:String,
-                        url:Option[String]=None,
-                        external_url:Option[String]=None,
+                        url:Option[URL]=None,
+                        external_url:Option[URL]=None,
                         title:Option[String]=None,
                         content_html:Option[String]=None,
                         content_text:Option[String]=None,
-                        image: Option[String]=None,
-                        banner_image:Option[String]=None,
+                        image: Option[URL]=None,
+                        banner_image:Option[URL]=None,
                         date_published:Option[String]=None,
                         date_modified: Option[String]=None,
                         author:Option[JSONFeedAuthor]=None,
@@ -32,6 +34,10 @@ case class JSONFeedItem(id:String,
                        )
 
 object Validator {
+  implicit val decodeInstant: Decoder[URL] = Decoder.decodeString.emap { str =>
+    Either.catchNonFatal(new URL(str)).leftMap(t => s"$t is not a valid url")
+  }
+
 
 
   def validate(s:String): ValidatedNel[Error, JSONFeedDocument] ={

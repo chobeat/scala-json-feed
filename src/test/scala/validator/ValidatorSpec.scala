@@ -1,26 +1,29 @@
 package validator
 
+import java.net.MalformedURLException
+
 import cats.data.{NonEmptyList, Validated}
 import cats.data.Validated.Invalid
 import io.circe.CursorOp.DownField
 import io.circe.DecodingFailure
 import org.scalatest._
 
-
-
 class ValidatorSpec extends FlatSpec with Matchers {
-  def parsingError(fields: String*)=Validated.invalidNel(
-    DecodingFailure("Attempt to decode value on failed cursor", fields.map(DownField).toList))
+  def parsingError(fields: String*) =
+    error("Attempt to decode value on failed cursor", fields: _*)
+
+  def error(msg: String, fields: String*) =
+    Validated.invalidNel(DecodingFailure(msg, fields.map(DownField).toList))
 
   "The validate function" should "return an empty JSONFeedDocument" in {
     val input = "{}"
-    Validator.validate(input) shouldEqual Right(JSONFeedDocument(None))
+    Validator.validate(input) shouldEqual Validated.valid(JSONFeedDocument(None))
   }
 
   "The validateItem function" should "return a JSONFeedItem" in {
     val input = """{"id":"abc","tags":["a","b","c"]}"""
 
-    Validator.validateItem(input) shouldEqual Right(
+    Validator.validateItem(input) shouldEqual Validated.valid(
       JSONFeedItem("abc", tags = Some(List("a", "b", "c"))))
 
   }
@@ -29,6 +32,15 @@ class ValidatorSpec extends FlatSpec with Matchers {
     val input = """{"tags":["a","b","c"]}"""
 
     Validator.validateItem(input) shouldEqual parsingError("id")
+
+  }
+  it should "return an error if the image is not a valid url" in {
+    val input = """{"id":"abc","tags":["a","b","c"],"image":"not-an-url" }"""
+
+    Validator.validateItem(input) shouldEqual Validated.invalidNel(
+      DecodingFailure(
+        new MalformedURLException("no protocol: not-an-url is not a valid url").toString,
+        List(DownField("image"))))
 
   }
 }
