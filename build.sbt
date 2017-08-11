@@ -10,7 +10,7 @@ lazy val root = (project in file(".")).
     name := "Hello",
     libraryDependencies += scalaTest % Test,
 
-    libraryDependencies += json4s
+    libraryDependencies ++= circe
 
 
 
