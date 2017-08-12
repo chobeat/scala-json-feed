@@ -47,7 +47,7 @@ case class Attachment(
     duration_in_seconds: Option[Int]
 )
 
-object Validator {
+object JSONFeedValidator {
   implicit val decodeURL: Decoder[URL] = Decoder.decodeString.emap { str =>
     {
       Either.catchNonFatal(new URL(str)).leftMap(t => s"$t is not a valid url")
@@ -58,14 +58,17 @@ object Validator {
   implicit val decodeHub: Decoder[JSONFeedHub] =
     Decoder.forProduct2("type", "url")(JSONFeedHub.apply)
 
-  def validate(s: String): ValidatedNel[Error, JSONFeedDocument] = {
+  def parse(s: String): ValidatedNel[Error, JSONFeedDocument] = {
     decodeAccumulating[JSONFeedDocument](s)
 
   }
 
-  def validateItem(s: String): ValidatedNel[Error, JSONFeedItem] = {
+  def parseItem(s: String): ValidatedNel[Error, JSONFeedItem] = {
     decodeAccumulating[JSONFeedItem](s)
 
   }
+
+  def isValidFeedDocument(s: String): Boolean =
+    parse(s).isValid
 
 }

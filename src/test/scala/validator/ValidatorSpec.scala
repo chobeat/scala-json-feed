@@ -19,7 +19,7 @@ class ValidatorSpec extends FlatSpec with Matchers {
       """
         {"title": "a title"}
       """
-    Validator.validate(input) shouldEqual Validated.valid(
+    JSONFeedValidator.parse(input) shouldEqual Validated.valid(
       JSONFeedDocument(title = "a title"))
   }
 
@@ -33,7 +33,7 @@ class ValidatorSpec extends FlatSpec with Matchers {
         ]
         }
       """
-    Validator.validate(input) shouldEqual Validated.valid(
+    JSONFeedValidator.parse(input) shouldEqual Validated.valid(
       JSONFeedDocument(
         title = "a title",
         hubs = Some(
@@ -46,7 +46,7 @@ class ValidatorSpec extends FlatSpec with Matchers {
   "The validateItem function" should "return a JSONFeedItem" in {
     val input = """{"id":"abc","tags":["a","b","c"]}"""
 
-    Validator.validateItem(input) shouldEqual Validated.valid(
+    JSONFeedValidator.parseItem(input) shouldEqual Validated.valid(
       JSONFeedItem("abc", tags = Some(List("a", "b", "c"))))
 
   }
@@ -54,13 +54,13 @@ class ValidatorSpec extends FlatSpec with Matchers {
   it should "return an error if the id is missing" in {
     val input = """{"tags":["a","b","c"]}"""
 
-    Validator.validateItem(input) shouldEqual parsingError("id")
+    JSONFeedValidator.parseItem(input) shouldEqual parsingError("id")
 
   }
   it should "return an error if the image is not a valid url" in {
     val input = """{"id":"abc","tags":["a","b","c"],"image":"not-an-url" }"""
 
-    Validator.validateItem(input) shouldEqual Validated.invalidNel(
+    JSONFeedValidator.parseItem(input) shouldEqual Validated.invalidNel(
       DecodingFailure(new MalformedURLException(
                         "no protocol: not-an-url is not a valid url").toString,
                       List(DownField("image"))))
@@ -71,8 +71,57 @@ class ValidatorSpec extends FlatSpec with Matchers {
     val input =
       s"""{"id":"abc","tags":["a","b","c"],"image": "http://test.com/image.png"}"""
 
-    Validator.validateItem(input).map(_.image) shouldEqual Validated.valid(
-      Some(new URL("http://test.com/image.png")))
+    JSONFeedValidator.parseItem(input).map(_.image) shouldEqual Validated
+      .valid(Some(new URL("http://test.com/image.png")))
 
+  }
+
+  "The isValidFeedDocument" should "return true with a valid document" in {
+    val input =
+      """{
+                  |    "version": "https://jsonfeed.org/version/1",
+                  |    "user_comment": "This is a podcast feed. You can add this feed to your podcast client using the following URL: http://therecord.co/feed.json",
+                  |    "title": "The Record",
+                  |    "home_page_url": "http://therecord.co/",
+                  |    "feed_url": "http://therecord.co/feed.json",
+                  |    "items": [
+                  |        {
+                  |            "id": "http://therecord.co/chris-parrish",
+                  |            "title": "Special #1 - Chris Parrish",
+                  |            "url": "http://therecord.co/chris-parrish",
+                  |            "content_text": "Chris has worked at Adobe and as a founder of Rogue Sheep, which won an Apple Design Award for Postage. Chris’s new company is Aged & Distilled with Guy English — which shipped Napkin, a Mac app for visual collaboration. Chris is also the co-host of The Record. He lives on Bainbridge Island, a quick ferry ride from Seattle.",
+                  |            "content_html": "Chris has worked at <a href=\"http://adobe.com/\">Adobe</a> and as a founder of Rogue Sheep, which won an Apple Design Award for Postage. Chris’s new company is Aged & Distilled with Guy English — which shipped <a href=\"http://aged-and-distilled.com/napkin/\">Napkin</a>, a Mac app for visual collaboration. Chris is also the co-host of The Record. He lives on <a href=\"http://www.ci.bainbridge-isl.wa.us/\">Bainbridge Island</a>, a quick ferry ride from Seattle.",
+                  |            "summary": "Brent interviews Chris Parrish, co-host of The Record and one-half of Aged & Distilled.",
+                  |            "date_published": "2014-05-09T14:04:00-07:00",
+                  |            "attachments": [
+                  |                {
+                  |                    "url": "http://therecord.co/downloads/The-Record-sp1e1-ChrisParrish.m4a",
+                  |                    "mime_type": "audio/x-m4a",
+                  |                    "size_in_bytes": 89970236,
+                  |                    "duration_in_seconds": 6629
+                  |                }
+                  |            ]
+                  |        }
+                  |    ]
+                  |}""".stripMargin
+
+    JSONFeedValidator.isValidFeedDocument(input) should be(true)
+
+  }
+
+  it should "return false if a document is not a valid JSON" in {
+    val input = """{
+                  |   --- "title": "The Record" +++<;
+                  |}""".stripMargin
+
+    JSONFeedValidator.isValidFeedDocument(input) should be(false)
+  }
+
+  it should "return false if a document is not a valid JSONFeed" in {
+    val input = """{
+                  |  "a_field": "some_content"
+                  |}""".stripMargin
+
+    JSONFeedValidator.isValidFeedDocument(input) should be(false)
   }
 }
