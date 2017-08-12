@@ -1,13 +1,13 @@
-package validator
+package core
 
 import java.net.{MalformedURLException, URL}
-
+import Models._
 import cats.data.Validated
 import io.circe.CursorOp.DownField
 import io.circe.DecodingFailure
 import org.scalatest._
 
-class ValidatorSpec extends FlatSpec with Matchers {
+class ParserSpec extends FlatSpec with Matchers {
   def parsingError(fields: String*) =
     error("Attempt to decode value on failed cursor", fields: _*)
 
@@ -19,7 +19,7 @@ class ValidatorSpec extends FlatSpec with Matchers {
       """
         {"title": "a title"}
       """
-    JSONFeedValidator.parse(input) shouldEqual Validated.valid(
+    JSONFeedParser.parse(input) shouldEqual Validated.valid(
       JSONFeedDocument(title = "a title"))
   }
 
@@ -33,7 +33,7 @@ class ValidatorSpec extends FlatSpec with Matchers {
         ]
         }
       """
-    JSONFeedValidator.parse(input) shouldEqual Validated.valid(
+    JSONFeedParser.parse(input) shouldEqual Validated.valid(
       JSONFeedDocument(
         title = "a title",
         hubs = Some(
@@ -46,7 +46,7 @@ class ValidatorSpec extends FlatSpec with Matchers {
   "The validateItem function" should "return a JSONFeedItem" in {
     val input = """{"id":"abc","tags":["a","b","c"]}"""
 
-    JSONFeedValidator.parseItem(input) shouldEqual Validated.valid(
+    JSONFeedParser.parseItem(input) shouldEqual Validated.valid(
       JSONFeedItem("abc", tags = Some(List("a", "b", "c"))))
 
   }
@@ -54,13 +54,13 @@ class ValidatorSpec extends FlatSpec with Matchers {
   it should "return an error if the id is missing" in {
     val input = """{"tags":["a","b","c"]}"""
 
-    JSONFeedValidator.parseItem(input) shouldEqual parsingError("id")
+    JSONFeedParser.parseItem(input) shouldEqual parsingError("id")
 
   }
   it should "return an error if the image is not a valid url" in {
     val input = """{"id":"abc","tags":["a","b","c"],"image":"not-an-url" }"""
 
-    JSONFeedValidator.parseItem(input) shouldEqual Validated.invalidNel(
+    JSONFeedParser.parseItem(input) shouldEqual Validated.invalidNel(
       DecodingFailure(new MalformedURLException(
                         "no protocol: not-an-url is not a valid url").toString,
                       List(DownField("image"))))
@@ -71,7 +71,7 @@ class ValidatorSpec extends FlatSpec with Matchers {
     val input =
       s"""{"id":"abc","tags":["a","b","c"],"image": "http://test.com/image.png"}"""
 
-    JSONFeedValidator.parseItem(input).map(_.image) shouldEqual Validated
+    JSONFeedParser.parseItem(input).map(_.image) shouldEqual Validated
       .valid(Some(new URL("http://test.com/image.png")))
 
   }
@@ -105,7 +105,7 @@ class ValidatorSpec extends FlatSpec with Matchers {
                   |    ]
                   |}""".stripMargin
 
-    JSONFeedValidator.isValidFeedDocument(input) should be(true)
+    JSONFeedParser.isValidFeedDocument(input) should be(true)
 
   }
 
@@ -114,7 +114,7 @@ class ValidatorSpec extends FlatSpec with Matchers {
                   |   --- "title": "The Record" +++<;
                   |}""".stripMargin
 
-    JSONFeedValidator.isValidFeedDocument(input) should be(false)
+    JSONFeedParser.isValidFeedDocument(input) should be(false)
   }
 
   it should "return false if a document is not a valid JSONFeed" in {
@@ -122,6 +122,6 @@ class ValidatorSpec extends FlatSpec with Matchers {
                   |  "a_field": "some_content"
                   |}""".stripMargin
 
-    JSONFeedValidator.isValidFeedDocument(input) should be(false)
+    JSONFeedParser.isValidFeedDocument(input) should be(false)
   }
 }
