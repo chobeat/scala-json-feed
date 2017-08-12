@@ -15,10 +15,33 @@ class ValidatorSpec extends FlatSpec with Matchers {
   def error(msg: String, fields: String*) =
     Validated.invalidNel(DecodingFailure(msg, fields.map(DownField).toList))
 
-  "The validate function" should "return an empty JSONFeedDocument" in {
-    val input = "{}"
+  "The validate function" should "return a valid JSONFeedDocument" in {
+    val input =
+      """
+        {"title": "a title"}
+      """
     Validator.validate(input) shouldEqual Validated.valid(
-      JSONFeedDocument(None))
+      JSONFeedDocument(title = "a title"))
+  }
+
+  it should "return a valid list of hubs" in {
+    val input =
+      """
+        {"title": "a title",
+        "hubs": [
+        {"type":"a type", "url":"http://test.com"},
+        {"type":"another type", "url":"http://test.com"}
+        ]
+        }
+      """
+    Validator.validate(input) shouldEqual Validated.valid(
+      JSONFeedDocument(
+        title = "a title",
+        hubs = Some(
+          List(JSONFeedHub("a type", new URL("http://test.com")),
+               JSONFeedHub("another type", new URL("http://test.com")))))
+    )
+
   }
 
   "The validateItem function" should "return a JSONFeedItem" in {
