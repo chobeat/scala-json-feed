@@ -16,7 +16,8 @@ object Models {
                               icon: Option[URL] = None,
                               favicon: Option[URL] = None,
                               expired: Option[Boolean] = None,
-                              hubs: Option[List[JSONFeedHub]] = None)
+                              hubs: Option[List[JSONFeedHub]] = None,
+                              items: List[JSONFeedItem] = List())
 
   case class JSONFeedHub(typ: String, url: URL)
 
