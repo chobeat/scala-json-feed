@@ -2,8 +2,7 @@ package validator
 
 import java.net.{MalformedURLException, URL}
 
-import cats.data.{NonEmptyList, Validated}
-import cats.data.Validated.Invalid
+import cats.data.Validated
 import io.circe.CursorOp.DownField
 import io.circe.DecodingFailure
 import org.scalatest._

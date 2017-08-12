@@ -5,14 +5,8 @@ import cats.data.ValidatedNel
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.parser._
-import io.circe.syntax._
-
-import scala.util.{Success, Try}
 import cats.syntax.either._
 
-/**
-  * Created by simone on 11.08.17.
-  */
 case class JSONFeedDocument(version: Option[URL] = None,
                             title: String,
                             home_page_url: Option[URL] = None,
@@ -42,7 +36,16 @@ case class JSONFeedItem(id: String,
                         date_published: Option[String] = None,
                         date_modified: Option[String] = None,
                         author: Option[JSONFeedAuthor] = None,
-                        tags: Option[List[String]] = None)
+                        tags: Option[List[String]] = None,
+                        attachments: Option[List[Attachment]] = None)
+
+case class Attachment(
+    url: URL,
+    mime_type: String,
+    title: Option[String],
+    size_in_bytes: Option[Int],
+    duration_in_seconds: Option[Int]
+)
 
 object Validator {
   implicit val decodeURL: Decoder[URL] = Decoder.decodeString.emap { str =>
