@@ -1,4 +1,4 @@
-package core
+package scalajsonfeed.core
 
 import cats.data.Validated
 import org.scalatest.{FlatSpec, Matchers}

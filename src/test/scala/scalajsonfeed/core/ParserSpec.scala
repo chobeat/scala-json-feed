@@ -1,4 +1,4 @@
-package core
+package scalajsonfeed.core
 
 import java.net.{MalformedURLException, URL}
 import Models._
@@ -46,7 +46,7 @@ class ParserSpec extends FlatSpec with Matchers {
 
   "The validateItem function" should "return a JSONFeedItem" in {
     val input =
-      """{"id":"abc","tags":["a","b","c"], "content_text":"content", "items":[]}"""
+      """{"id":"abc","tags":["a","b","c"], "content_text":"content"}"""
 
     JSONFeedParser.parseItem(input) shouldEqual Validated.valid(
       JSONFeedItem("abc",

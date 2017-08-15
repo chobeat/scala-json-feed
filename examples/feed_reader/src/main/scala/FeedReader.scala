@@ -1,5 +1,5 @@
 import scala.io.StdIn.readLine
-import core.JSONFeedParser.parse
+import scalajsonfeed.core.JSONFeedParser.parse
 
 object FeedReader {
   def main(args: Array[String]): Unit = {

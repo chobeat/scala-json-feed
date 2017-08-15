@@ -1,4 +1,4 @@
-package core
+package scalajsonfeed.core
 import java.net.URL
 
 import cats.data.ValidatedNel

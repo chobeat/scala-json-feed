@@ -1,4 +1,4 @@
-package core
+package scalajsonfeed.core
 
 import io.circe.syntax._
 import Models._
