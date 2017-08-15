@@ -10,7 +10,7 @@ This is my first published and supported library so any criticism on the API, bu
 
 ## Parsing
 
-```
+```scala
 import scalajsonfeed.core.JSONFeedParser._
 val input:String = """
 {
