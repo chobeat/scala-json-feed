@@ -29,8 +29,8 @@ object Models {
                           url: Option[URL] = None,
                           external_url: Option[URL] = None,
                           title: Option[String] = None,
-                          content_html: Option[String] = None,
-                          content_text: Option[String] = None,
+                          content_text: Option[String]=None,
+                          content_html:Option[String]=None,
                           image: Option[URL] = None,
                           banner_image: Option[URL] = None,
                           date_published: Option[String] = None,
@@ -38,6 +38,8 @@ object Models {
                           author: Option[JSONFeedAuthor] = None,
                           tags: Option[List[String]] = None,
                           attachments: Option[List[Attachment]] = None)
+
+  case class ItemContent(text: Option[String], html: Option[String])
 
   case class Attachment(
       url: URL,
@@ -49,5 +51,4 @@ object Models {
 
   implicit val encodeUrl: Encoder[URL] =
     Encoder.forProduct1("url")(u => u.toString)
-
 }

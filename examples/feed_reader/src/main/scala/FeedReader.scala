@@ -10,8 +10,8 @@ object FeedReader {
       println(s"Title: ${d.title}")
       for { item <- d.items } yield println(s"""
             |Item ${item.id}
-            |${item.content_text.getOrElse("")}
-            |${item.content_html.getOrElse("")}
+            |${item.content.text.getOrElse("")}
+            |${item.content.html.getOrElse("")}
           """.stripMargin)
 
     })

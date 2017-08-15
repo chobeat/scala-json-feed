@@ -17,7 +17,7 @@ class ParserSpec extends FlatSpec with Matchers {
   "The validate function" should "return a valid JSONFeedDocument" in {
     val input =
       """
-        {"title": "a title"}
+        {"title": "a title", "items":[]}
       """
     JSONFeedParser.parse(input) shouldEqual Validated.valid(
       JSONFeedDocument(title = "a title"))
@@ -30,7 +30,8 @@ class ParserSpec extends FlatSpec with Matchers {
         "hubs": [
         {"type":"a type", "url":"http://test.com"},
         {"type":"another type", "url":"http://test.com"}
-        ]
+        ],
+        "items":[]
         }
       """
     JSONFeedParser.parse(input) shouldEqual Validated.valid(
@@ -44,15 +45,18 @@ class ParserSpec extends FlatSpec with Matchers {
   }
 
   "The validateItem function" should "return a JSONFeedItem" in {
-    val input = """{"id":"abc","tags":["a","b","c"]}"""
+    val input =
+      """{"id":"abc","tags":["a","b","c"], "content_text":"content", "items":[]}"""
 
     JSONFeedParser.parseItem(input) shouldEqual Validated.valid(
-      JSONFeedItem("abc", tags = Some(List("a", "b", "c"))))
+      JSONFeedItem("abc",
+                   tags = Some(List("a", "b", "c")),
+                   content_text = Some("content")))
 
   }
 
   it should "return an error if the id is missing" in {
-    val input = """{"tags":["a","b","c"]}"""
+    val input = """{"tags":["a","b","c"], "content_text":"content"}"""
 
     JSONFeedParser.parseItem(input) shouldEqual parsingError("id")
 
@@ -69,10 +73,18 @@ class ParserSpec extends FlatSpec with Matchers {
 
   it should "return a URL object if the image is a valid url" in {
     val input =
-      s"""{"id":"abc","tags":["a","b","c"],"image": "http://test.com/image.png"}"""
+      s"""{"id":"abc","tags":["a","b","c"],"image": "http://test.com/image.png", "content_text":"content"}"""
 
     JSONFeedParser.parseItem(input).map(_.image) shouldEqual Validated
       .valid(Some(new URL("http://test.com/image.png")))
+
+  }
+
+  it should "return an error if both content_text and content_html are not set" in {
+    val input =
+      s"""{"id":"abc","tags":["a","b","c"]}"""
+    JSONFeedParser.parseItem(input) shouldEqual Validated.invalidNel(
+      DecodingFailure("Both `content_text` and `content_html` are missing",List()))
 
   }
 
