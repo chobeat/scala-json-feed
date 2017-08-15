@@ -6,6 +6,7 @@ import cats.data.Validated
 import io.circe.CursorOp.DownField
 import io.circe.DecodingFailure
 import org.scalatest._
+import cats.syntax.option._
 
 class ParserSpec extends FlatSpec with Matchers {
   def parsingError(fields: String*) =
@@ -37,9 +38,9 @@ class ParserSpec extends FlatSpec with Matchers {
     JSONFeedParser.parse(input) shouldEqual Validated.valid(
       JSONFeedDocument(
         title = "a title",
-        hubs = Some(
+        hubs =
           List(JSONFeedHub("a type", new URL("http://test.com")),
-               JSONFeedHub("another type", new URL("http://test.com")))))
+               JSONFeedHub("another type", new URL("http://test.com"))).some)
     )
 
   }
@@ -50,8 +51,8 @@ class ParserSpec extends FlatSpec with Matchers {
 
     JSONFeedParser.parseItem(input) shouldEqual Validated.valid(
       JSONFeedItem("abc",
-                   tags = Some(List("a", "b", "c")),
-                   content_text = Some("content")))
+                   tags = List("a", "b", "c").some,
+                   content_text = "content".some))
 
   }
 
@@ -76,7 +77,7 @@ class ParserSpec extends FlatSpec with Matchers {
       s"""{"id":"abc","tags":["a","b","c"],"image": "http://test.com/image.png", "content_text":"content"}"""
 
     JSONFeedParser.parseItem(input).map(_.image) shouldEqual Validated
-      .valid(Some(new URL("http://test.com/image.png")))
+      .valid(new URL("http://test.com/image.png").some)
 
   }
 
@@ -84,7 +85,8 @@ class ParserSpec extends FlatSpec with Matchers {
     val input =
       s"""{"id":"abc","tags":["a","b","c"]}"""
     JSONFeedParser.parseItem(input) shouldEqual Validated.invalidNel(
-      DecodingFailure("Both `content_text` and `content_html` are missing",List()))
+      DecodingFailure("Both `content_text` and `content_html` are missing",
+                      List()))
 
   }
 
